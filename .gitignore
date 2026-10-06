@@ -1,0 +1,21 @@
+# Fichiers fournis par l'enseignant (non versionnés)
+exemple/
+*.pdf
+
+# Archives de rendu
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Systèmes
+Thumbs.db
+desktop.ini
+.DS_Store
