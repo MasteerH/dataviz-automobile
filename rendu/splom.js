@@ -1,9 +1,9 @@
 
-const splomMarge = { haut: 10, droite: 10, bas: 30, gauche: 45 };
-const splomCote = 780;
+const splomMarge = { haut: 10, droite: 10, bas: 40, gauche: 60 };
+const splomCote = 1440;
 const splomTaille = splomCote / dimensions.length;
 const splomEspace = 5;
-const splomRayon = 1.8;
+const splomRayon = 2.2;
 
 const splomX = {};
 const splomY = {};
@@ -47,6 +47,7 @@ function splomEffacerBrush() {
 
 
 function splomDebutBrush(event, p) {
+ cacherTooltip();
 	if (splomEffacement) {
 		return;
 	}
@@ -124,7 +125,7 @@ function dessinerSplom() {
 		});
 
 	svg.selectAll(".splom-axe-x text, .splom-axe-y text")
-		.style("font-size", "8px");
+		.style("font-size", "12px");
 
 	const cellules = svg.selectAll(".splom-cellule")
 		.data(splomPaires())
@@ -161,18 +162,18 @@ function dessinerSplom() {
 	diagonale.append("text")
 		.attr("class", "splom-nom")
 		.attr("text-anchor", "middle")
-		.style("font-size", "9px")
+		.style("font-size", "12px")
 		.style("font-weight", "bold")
 		.each(function (p) {
-			const morceaux = couperNom(p.x);
-			const depart = splomTaille / 2 - (morceaux.length - 1) * 5.5 + 3;
+			const morceaux = libellesDimensions[p.x];
+			const depart = splomTaille / 2 - (morceaux.length - 1) * 7.5 + 3;
 			d3.select(this).selectAll("tspan")
 				.data(morceaux)
 				.enter()
 				.append("tspan")
 				.attr("x", splomTaille / 2)
 				.attr("y", function (m, i) {
-					return depart + i * 11;
+					return depart + i * 15;
 				})
 				.text(function (m) {
 					return m;
@@ -203,6 +204,23 @@ function dessinerSplom() {
 		.on("end", splomFinBrush);
 
 	nuages.call(splomBrush);
+
+ // Écouter la cellule : le brush couvre les points et reçoit aussi le survol.
+ nuages.on("pointermove.tooltip", function (event, p) {
+  if (event.buttons) { cacherTooltip(); return; }
+  const [x, y] = d3.pointer(event, this);
+  let proche = null;
+  let distance = 64;
+  voitures.forEach(function (d) {
+   if (!estSelectionnee(d)) return;
+   const dx = splomX[p.x](d[p.x]) - x;
+   const dy = splomY[p.y](d[p.y]) - y;
+   const carre = dx * dx + dy * dy;
+   if (carre <= distance) { distance = carre; proche = d; }
+  });
+  if (proche) afficherTooltip(event, proche);
+  else cacherTooltip();
+ }).on("pointerleave.tooltip", cacherTooltip);
 
 	majSplom("splom");
 }

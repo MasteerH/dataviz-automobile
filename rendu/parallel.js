@@ -1,7 +1,7 @@
 
-const paraMarge = { haut: 40, droite: 30, bas: 15, gauche: 45 };
-const paraLargeurMin = 760;
-const paraHauteur = 300;
+const paraMarge = { haut: 60, droite: 65, bas: 25, gauche: 65 };
+const paraLargeurMin = 1430;
+const paraHauteur = 360;
 const paraDemiBrush = 10;
 
 const paraX = d3.scalePoint()
@@ -117,7 +117,7 @@ function dessinerParallel() {
 	});
 
 	axes.selectAll(".tick text")
-		.style("font-size", "9px")
+		.style("font-size", "12px")
 		.style("paint-order", "stroke")
 		.style("stroke", "white")
 		.style("stroke-width", "3px");
@@ -126,21 +126,21 @@ function dessinerParallel() {
 		.attr("class", "para-nom")
 		.attr("text-anchor", "middle")
 		.attr("fill", "black")
-		.style("font-size", "10px")
+		.style("font-size", "12px")
 		.style("font-weight", "bold")
 		.style("cursor", "pointer")
 		.on("click", function (event, dim) {
 			setDimension(dim);
 		})
 		.each(function (dim) {
-			const morceaux = couperNom(dim);
+			const morceaux = libellesDimensions[dim];
 			d3.select(this).selectAll("tspan")
 				.data(morceaux)
 				.enter()
 				.append("tspan")
 				.attr("x", 0)
 				.attr("y", function (m, i) {
-					return -10 - (morceaux.length - 1 - i) * 11;
+					return -12 - (morceaux.length - 1 - i) * 15;
 				})
 				.text(function (m) {
 					return m;
@@ -148,12 +148,34 @@ function dessinerParallel() {
 		});
 
 	paraBrush
+  .on("start.tooltip", cacherTooltip)
 		.on("brush", paraPendantBrush)
 		.on("end", paraPendantBrush);
 
 	axes.append("g")
 		.attr("class", "para-brush")
 		.call(paraBrush);
+
+ // Chercher la ligne la plus proche, même lorsque le pointeur est sur un brush.
+ svg.on("pointermove.tooltip", function (event) {
+  if (event.buttons) { cacherTooltip(); return; }
+  const [x, y] = d3.pointer(event, this);
+  let proche = null;
+  let distance = 36;
+  voitures.forEach(function (d) {
+   if (!estSelectionnee(d)) return;
+   for (let i = 0; i < dimensions.length - 1; i++) {
+    const ax = paraX(dimensions[i]), ay = paraY[dimensions[i]](d[dimensions[i]]);
+    const bx = paraX(dimensions[i + 1]), by = paraY[dimensions[i + 1]](d[dimensions[i + 1]]);
+    const dx = bx - ax, dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
+    const carre = (x - ax - t * dx) ** 2 + (y - ay - t * dy) ** 2;
+    if (carre <= distance) { distance = carre; proche = d; }
+   }
+  });
+  if (proche) afficherTooltip(event, proche);
+  else cacherTooltip();
+ }).on("pointerleave.tooltip", cacherTooltip);
 
 	majParallel("parallel");
 }

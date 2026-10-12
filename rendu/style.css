@@ -65,3 +65,18 @@ footer { padding: 20px 4px 0; font-size: 0.8rem; color: var(--muted); }
   .view-nav a { padding: 8px 10px; }
   .chart-container, .placeholder { min-height: 220px; }
 }
+.selection-toolbar { max-width: 1440px; margin-inline: auto; padding: 16px 28px; background: white; border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; padding: 0; list-style: none; font-size: 0.85rem; }
+.legend li { display: flex; align-items: center; gap: 8px; }
+.legend-swatch, .legend-muted { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.legend-swatch[data-fuel="gas"] { background: #1f77b4; }
+.legend-swatch[data-fuel="diesel"] { background: #ff7f0e; }
+.legend-muted { background: #ccc; }
+.selection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+#selection-count { margin: 0; font-size: 0.85rem; }
+button { font: inherit; font-size: 0.85rem; padding: 8px 12px; border: 1px solid #9db3bf; border-radius: 5px; color: var(--text); background: white; cursor: pointer; }
+button:hover:not(:disabled) { background: #edf6fc; }
+button:disabled { opacity: 0.55; cursor: default; }
+#tooltip[hidden] { display: none; }
+#tooltip { white-space: normal; }
+@media (max-width: 500px) { .selection-toolbar { padding: 16px; } }

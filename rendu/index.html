@@ -18,15 +18,24 @@
     </nav>
   </header>
   <aside class="guide"><p>Sélectionnez des voitures dans un graphique pour les retrouver dans les autres. La couleur représente le carburant : essence ou diesel.</p></aside>
+  <div class="selection-toolbar">
+    <ul class="legend" aria-label="Couleurs des carburants">
+      <li><span class="legend-swatch" data-fuel="gas" aria-hidden="true"></span>Essence</li>
+      <li><span class="legend-swatch" data-fuel="diesel" aria-hidden="true"></span>Diesel</li>
+      <li><span class="legend-muted" aria-hidden="true"></span>Non sélectionnées</li>
+    </ul>
+    <div class="selection-actions"><p id="selection-count" role="status" aria-live="polite"></p><button id="reset-selection" type="button" disabled>Effacer la sélection</button></div>
+  </div>
   <main id="exploration">
     <section class="panel" aria-labelledby="splom-title">
       <h2 id="splom-title">Matrice de scatterplots</h2>
-      <p>Comparez les dimensions deux à deux.</p>
+      <p>Comparez les dimensions deux à deux. Tracez un rectangle pour sélectionner des voitures ; cliquez sur la diagonale pour choisir une dimension. Faites défiler horizontalement pour voir toute la matrice.</p>
       <div id="splom" class="chart-container"><p class="placeholder">Matrice de scatterplots — graphique à venir</p></div>
     </section>
     <section class="panel" aria-labelledby="parallel-title">
       <h2 id="parallel-title">Coordonnées parallèles</h2>
-      <p>Chaque ligne représente une voiture. Cliquez sur le titre d’un axe pour choisir la dimension de l’histogramme.</p>
+      <p>Chaque ligne représente une voiture. Sélectionnez un intervalle sur un axe ; les intervalles de plusieurs axes se combinent (toutes les conditions doivent être respectées). Cliquez sur un titre pour choisir la dimension de l’histogramme.</p>
+      <p>Chaque axe a sa propre échelle. Un rendement élevé en mpg signifie davantage de miles parcourus par gallon de carburant.</p>
       <div id="parallel" class="chart-container"><p class="placeholder">Coordonnées parallèles — graphique à venir</p></div>
     </section>
     <section class="panel histogram-panel" aria-labelledby="histo-title">
@@ -63,7 +72,7 @@
           <output id="bandwidth-value" for="bandwidth-slider">À définir selon la dimension</output>
         </div>
       </div>
-      <p class="histogram-note">La courbe est une somme de gaussiennes d’amplitude 1. Son échelle verticale est indépendante des effectifs de l’histogramme.</p>
+      <p class="histogram-note">Tracez un intervalle pour sélectionner des voitures. Les parties colorées montrent les voitures sélectionnées par carburant ; le gris conserve les autres effectifs. Le dernier intervalle inclut la valeur maximale. La courbe violette représente la somme des gaussiennes d’amplitude 1 des 201 voitures : elle se lit sur l’axe de droite, indépendamment des effectifs à gauche. Son maximum atteint le haut du graphique. Une largeur plus grande augmente le lissage ; les unités de largeur sont celles de la dimension choisie.</p>
       <div id="histo" class="chart-container"><p class="placeholder">Histogramme et gaussiennes — graphique à venir</p></div>
     </section>
   </main>

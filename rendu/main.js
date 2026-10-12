@@ -40,6 +40,42 @@ const couleur = d3.scaleOrdinal()
 const couleurEfface = "#cccccc";
 const couleurDimension = "#16789b";
 
+// Libellés séparés des clés utilisées pour accéder aux données.
+const libellesDimensions = {
+ "symboling": ["Risque", "assurance"],
+ "wheel-base": ["Empattement", "(pouces)"],
+ "length": ["Longueur", "(pouces)"],
+ "width": ["Largeur", "(pouces)"],
+ "height": ["Hauteur", "(pouces)"],
+ "curb-weight": ["Poids à vide", "(lb)"],
+ "num-of-cylinders": ["Nombre de", "cylindres"],
+ "engine-size": ["Cylindrée", "(pouces³)"],
+ "compression-ratio": ["Taux de", "compression"],
+ "city-mpg": ["Rendement ville", "(mpg)"],
+ "highway-mpg": ["Rendement route", "(mpg)"],
+ "price": ["Prix", "(USD)"]
+};
+
+function majCompteurSelection() {
+ const compteur = document.getElementById("selection-count");
+ compteur.textContent = selection === null
+  ? "Aucune sélection active · " + data.length + " voitures affichées"
+  : selection.size + " voiture" + (selection.size === 1 ? "" : "s") + " sélectionnée" + (selection.size === 1 ? "" : "s") + " sur " + data.length;
+ document.getElementById("reset-selection").disabled = selection === null;
+}
+
+function cacherTooltip() {
+ document.getElementById("tooltip").hidden = true;
+}
+
+function afficherTooltip(event, d) {
+ const tip = document.getElementById("tooltip");
+ tip.textContent = d.make + " · " + d.price.toLocaleString("fr-FR") + " USD · " + (d["fuel-type"] === "gas" ? "Essence" : "Diesel");
+ tip.hidden = false;
+ tip.style.left = Math.max(8, Math.min(event.clientX + 14, window.innerWidth - tip.offsetWidth - 8)) + "px";
+ tip.style.top = Math.max(8, Math.min(event.clientY + 14, window.innerHeight - tip.offsetHeight - 8)) + "px";
+}
+
 
 const formatNombre = d3.format("~s");
 
@@ -88,6 +124,8 @@ function setSelection(ids, source) {
 	vues.forEach(function (vue) {
 		vue.mettreAJour(source);
 	});
+ cacherTooltip();
+ majCompteurSelection();
 }
 
 
@@ -106,6 +144,17 @@ function setDimension(nom) {
 
 
 window.addEventListener("load", function () {
+ document.querySelectorAll(".legend-swatch").forEach(function (pastille) {
+  pastille.style.backgroundColor = couleur(pastille.dataset.fuel);
+ });
+ document.querySelectorAll("#dimension-select option").forEach(function (option) {
+  option.textContent = libellesDimensions[option.value].join(" ");
+ });
+ document.getElementById("reset-selection").addEventListener("click", function () {
+  setSelection(null, "reset");
+ });
+ window.addEventListener("scroll", cacherTooltip, true);
+ majCompteurSelection();
 	vues.forEach(function (vue) {
 		vue.dessiner();
 	});
