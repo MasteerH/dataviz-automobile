@@ -28,6 +28,5 @@ Le prof nous a demandé de garder entre 10 et 15 attributs numériques et au moi
 
 
 ## Visualisations
-git commit -am "README : noms de colonnes en code"
 
 (à compléter)

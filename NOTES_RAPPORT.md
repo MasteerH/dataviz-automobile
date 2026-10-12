@@ -71,3 +71,27 @@ L'imputation (moyenne/médiane) a été rejetée : 41 valeurs identiques dans `n
 - Application 100 % hors ligne, sans serveur : ouverture directe de la page HTML dans Chrome (`file://`), conformément aux consignes.
 - Les données sont donc chargées via un fichier `data.js` (`const data = [...]`) inclus par une balise `<script>`, comme dans l'exemple du cours (`d3.csv()` est bloqué par Chrome en `file://`).
 - Bibliothèque : `d3.v7.min.js` (version locale fournie).
+
+## 8. Consignes orales du prof pour l'histogramme (séance du 12/10/2026)
+
+- L'utilisateur peut changer le **nombre de colonnes (bins)** avec un slider.
+- L'intervalle du **dernier bin doit être fermé** : tous les bins sont de la forme [a, b[ sauf le dernier qui est [a, b], sinon la voiture qui a la valeur maximale n'est comptée dans aucune colonne. Contrôle : la somme des effectifs doit faire 201.
+- La courbe de densité est tracée **sur le même graphique** que l'histogramme.
+- Noyau gaussien d'**amplitude constante** (1 ou une autre constante, pas besoin de normaliser) et de **largeur donnée par l'utilisateur** (slider).
+- La courbe est **mise à l'échelle pour que son maximum atteigne le haut de l'espace graphique alloué** : elle a donc sa propre échelle verticale, indépendante de celle des effectifs.
+- **Ne pas utiliser de fonction prédéfinie pour l'histogramme** (pas de `d3.bin()`) : le rangement des valeurs dans les colonnes est codé à la main, ce qui permet de garantir le dernier bin fermé.
+- Courbe : **un point calculé tous les 3 ou 4 pixels** le long de l'axe horizontal (le nombre de points dépend donc de la largeur du graphique).
+
+## 9. Liens avec le cours (à citer dans le rapport)
+
+Slides 1 (Classical Visualizations) :
+- p. 45 – Histogramme : montre le centre, la dispersion, l'asymétrie, les modes ; « Bins matter » → justifie le slider du nombre de colonnes.
+- p. 46 – Limites : un petit changement des bornes des colonnes peut changer l'histogramme, des modes peuvent être ratés ou créés → exemple de `compression-ratio` (essence / diesel).
+- p. 47 – Estimation par noyau : f(x) = 1/(n·h) · Σ K((x − xi)/h), h = largeur du noyau, noyau gaussien C·exp(−½·((x − xi)/h)²). La constante C correspond à « l'amplitude constante » demandée par le prof.
+- p. 48 – « Bandwidth choice is an art, usually want to try several » → justifie le slider de largeur.
+- Recommandations : une couleur par catégorie, pas plus de 6 couleurs, éviter rouge/vert, réserver la couleur au surlignage pour un contraste maximal.
+
+Slides 2 (Visualizing Multi-dimensional data) :
+- p. 20–21 – Matrice de scatterplots (SPLOM) : comparaison deux à deux de chaque dimension.
+- p. 22–23 – Vues multiples coordonnées, sélection liée entre les vues (linking) → notre sélection synchronisée.
+- p. 25–34 – Coordonnées parallèles : un axe par dimension, une ligne par individu ; transparence (alpha blending) efficace ; l'interaction est cruciale (brushing, filtrage) ; montre surtout les relations entre axes voisins → l'ordre des axes compte.
