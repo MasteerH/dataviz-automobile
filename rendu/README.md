@@ -1,40 +1,32 @@
-# TP Visualisation de données — Exploration du jeu *Automobile* en d3.js
+# TP Visualisation de données - Dataset Automobile en d3.js
 
-**Auteurs :** MAHDIR Hamza · EL AZIZI Amira Mariam
+Auteurs : MAHDIR Hamza, EL AZIZI Amira Mariam
 
-## Ouvrir l'application
 
-1. Ouvrir le fichier `index.html` dans **Google Chrome / Chromium** (double-clic).
-2. Aucune installation, aucun serveur, aucune connexion Internet requise : les données (`data.js`) et la librairie (`d3.v7.min.js`) sont incluses dans ce dossier.
+## Lancement
 
-## Contenu du dossier
+Ouvrir index.html. Pas besoin de serveur ni d'internet.
 
-| Fichier | Rôle |
-|---|---|
-| `index.html` | Page de l'application |
-| `data.js` | Données nettoyées (`const data = [...]`) |
-| `d3.v7.min.js` | Librairie d3.js v7 (version locale) |
 
-## Jeu de données
+## Données
 
-**Automobile (1985 Auto Imports Database)** — UCI Machine Learning Repository
+Dataset Automobile du UCI Machine Learning Repository :
 https://archive.ics.uci.edu/dataset/10/automobile
 
-- Données d'origine : 205 voitures, 26 attributs.
-- Après nettoyage : **201 voitures**, **12 attributs numériques** :
-  `symboling`, `wheel-base`, `length`, `width`, `height`, `curb-weight`, `num-of-cylinders`, `engine-size`, `compression-ratio`, `city-mpg`, `highway-mpg`, `price`
-- Attributs catégoriels conservés : `fuel-type` (couleur), `make` (infobulle), `body-style`.
+Au départ on a 205 voitures et 26 attributs. Après nettoyage on garde 201 voitures, 12 attributs numériques et 3 catégoriels (make, fuel-type, body-style).
 
-### Traitement des valeurs manquantes
 
-- Colonnes supprimées : `normalized-losses` (41 valeurs manquantes), `bore` et `stroke` (absentes pour les moteurs rotatifs Mazda), `horsepower` et `peak-rpm` (pour conserver `price` tout en gardant au moins 200 lignes).
-- Lignes supprimées : les 4 voitures sans prix.
+## Choix de suppression
 
-## Visualisations et interactions
+Le prof nous a demandé de garder entre 10 et 15 attributs numériques et au moins 200 lignes. Les valeurs manquantes sont notées "?" dans le fichier.
 
-*(à compléter au fil du projet)*
+- normalized-losses : 41 valeurs manquantes (20%). Si on supprime les lignes on perd trop de voitures, et si on remplace par la moyenne on fausse la distribution. Donc on supprime la colonne.
+- bore et stroke : manquants seulement pour 4 Mazda à moteur rotatif. Ces moteurs n'ont pas de piston donc la valeur n'existe pas. On supprime les colonnes.
+- horsepower et peak-rpm : si on les garde avec price il faut supprimer 6 lignes et on tombe à 199. On a préféré garder price. On ne perd pas beaucoup d'information pour horsepower car engine-size est très corrélé avec (r = 0.81).
+- 4 voitures sans prix : ce sont les seules lignes supprimées.
+- Les autres attributs catégoriels ne servent pas pour l'analyse.
 
-- **Matrice de scatterplots** : …
-- **Coordonnées parallèles** : …
-- **Histogramme + densité à noyau gaussien** : …
-- **Sélection synchronisée** : …
+
+## Visualisations
+
+(à compléter)

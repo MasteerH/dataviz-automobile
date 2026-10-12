@@ -43,7 +43,7 @@ L'imputation (moyenne/médiane) a été rejetée : 41 valeurs identiques dans `n
 
 - **`normalized-losses`** : 41 valeurs manquantes sur 205 (20 %) — la supprimer ligne par ligne ferait tomber à 164 lignes ; l'imputer fausserait sa distribution.
 - **`bore` / `stroke`** (alésage / course) : manquants uniquement pour les 4 Mazda à **moteur rotatif** (Wankel), qui n'ont pas de piston. La valeur n'est pas « perdue », elle **n'existe pas physiquement** → suppression de la colonne plutôt que des lignes.
-- **`horsepower` / `peak-rpm`** : supprimées pour pouvoir garder `price` tout en restant ≥ 200 lignes. Perte limitée : `horsepower` est fortement corrélée à `engine-size`, qui reste disponible.
+- **`horsepower` / `peak-rpm`** : supprimées pour pouvoir garder `price` tout en restant ≥ 200 lignes. Perte limitée pour `horsepower` : elle est fortement corrélée à `engine-size` (r = 0.81), qui reste disponible. En revanche `peak-rpm` n'est presque pas corrélée à `engine-size` (r = -0.24) : c'est une vraie perte d'information, assumée pour garder `price`.
 - **4 lignes sans `price`** supprimées : `price` est la variable la plus parlante du jeu, on préfère perdre 4 voitures que cette dimension.
 - **`num-of-doors`** : supprimée (catégorielle, 2 `?`, peu utile pour l'analyse).
 
