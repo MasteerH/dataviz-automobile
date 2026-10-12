@@ -1,29 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-	<title>Visu</title>
-	<script type="text/javascript" src="data.js"></script>
-	<script type="text/javascript" src="d3.v7.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exploration du jeu Automobile</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="container"></div>
-<script>
-	var p = d3.select("#container").selectAll("p")
-		.data(data)
-		.enter()
-		.append("p")
-		.text(function (d) {
-			return d["REGION-CENTROID-ROW"];
-		});
-</script>
+  <a class="skip-link" href="#exploration">Aller aux visualisations</a>
+  <header class="page-header">
+    <h1>Exploration du jeu Automobile</h1>
+    <p>201 voitures · 12 dimensions numériques · Données UCI, 1985</p>
+    <nav class="view-nav" aria-label="Accès aux graphiques">
+      <a href="#splom-title"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v17h17"/><circle cx="8" cy="14" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="19" cy="5" r="1.5"/></svg>Matrice</a>
+      <a href="#parallel-title"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v18M12 3v18M19 3v18M5 7l7 9 7-11M5 16l7-9 7 10"/></svg>Coordonnées parallèles</a>
+      <a href="#histo-title">Histogramme</a>
+    </nav>
+  </header>
+  <aside class="guide"><p>Sélectionnez des voitures dans un graphique pour les retrouver dans les autres. La couleur représente le carburant : essence ou diesel.</p></aside>
+  <main id="exploration">
+    <section class="panel" aria-labelledby="splom-title">
+      <h2 id="splom-title">Matrice de scatterplots</h2>
+      <p>Comparez les dimensions deux à deux.</p>
+      <div id="splom" class="chart-container"><p class="placeholder">Matrice de scatterplots — graphique à venir</p></div>
+    </section>
+    <section class="panel" aria-labelledby="parallel-title">
+      <h2 id="parallel-title">Coordonnées parallèles</h2>
+      <p>Chaque ligne représente une voiture. Cliquez sur le titre d’un axe pour choisir la dimension de l’histogramme.</p>
+      <div id="parallel" class="chart-container"><p class="placeholder">Coordonnées parallèles — graphique à venir</p></div>
+    </section>
+    <section class="panel histogram-panel" aria-labelledby="histo-title">
+      <h2 id="histo-title">Histogramme et courbe de gaussiennes</h2>
+      <div class="controls" aria-label="Réglages de l’histogramme">
+        <div class="control">
+          <label for="dimension-select">Dimension affichée</label>
+          <!-- Noms et ordre conformes à NUMERIQUES dans prepare_data.py.
+               histogram.js reliera ce menu à setDimension(). -->
+          <select id="dimension-select">
+            <option value="symboling">Risque d’assurance (symboling)</option>
+            <option value="wheel-base">Empattement (wheel-base)</option>
+            <option value="length">Longueur (length)</option>
+            <option value="width">Largeur (width)</option>
+            <option value="height">Hauteur (height)</option>
+            <option value="curb-weight">Poids à vide (curb-weight)</option>
+            <option value="num-of-cylinders">Nombre de cylindres (num-of-cylinders)</option>
+            <option value="engine-size">Cylindrée (engine-size)</option>
+            <option value="compression-ratio">Taux de compression (compression-ratio)</option>
+            <option value="city-mpg">Rendement en ville (city-mpg)</option>
+            <option value="highway-mpg">Rendement sur autoroute (highway-mpg)</option>
+            <option value="price" selected>Prix (price)</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="bin-slider">Nombre de colonnes</label>
+          <input id="bin-slider" type="range" min="2" max="50" step="1" value="15" aria-describedby="bin-value">
+          <output id="bin-value" for="bin-slider">15</output>
+        </div>
+        <div class="control">
+          <label for="bandwidth-slider">Largeur des gaussiennes</label>
+          <!-- histogram.js définira les bornes et la valeur selon max - min, puis activera le slider. -->
+          <input id="bandwidth-slider" type="range" disabled aria-describedby="bandwidth-value">
+          <output id="bandwidth-value" for="bandwidth-slider">À définir selon la dimension</output>
+        </div>
+      </div>
+      <p class="histogram-note">La courbe est une somme de gaussiennes d’amplitude 1. Son échelle verticale est indépendante des effectifs de l’histogramme.</p>
+      <div id="histo" class="chart-container"><p class="placeholder">Histogramme et gaussiennes — graphique à venir</p></div>
+    </section>
+  </main>
+  <div id="tooltip" role="tooltip" hidden></div>
+  
+  <!-- Scripts locaux, sans serveur, fetch ni d3.csv. -->
+  <!-- data.js déclare const data : 201 objets, sans id.
+       main.js doit attribuer les id de 0 à 200 et définir l’état partagé.
+       Le démarrage des vues doit attendre leur chargement.
+       La dimension initiale de main.js doit correspondre au menu (price). -->
+  <script src="data.js"></script>
+  <script src="d3.v7.min.js"></script>
+  <script src="main.js"></script>
+  <script src="splom.js"></script>
+  <script src="parallel.js"></script>
+  <script src="kde.js"></script>
+  <script src="histogram.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
