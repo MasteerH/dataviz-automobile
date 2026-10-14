@@ -1,0 +1,198 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{images/}}
+
+\newcommand{\capture}[3]{%
+\begin{figure}[H]
+\centering
+\IfFileExists{images/#1}{%
+\includegraphics[width=#2\textwidth]{#1}%
+}{%
+\fcolorbox{gray}{gray!10}{\parbox[c][5cm][c]{#2\textwidth}{\centering\textbf{Capture à placer}\\[2mm]\texttt{images/#1}}}%
+}
+\caption{#3}
+\end{figure}
+}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{TP Visualisation de données\\[2mm]\large Exploration du dataset Automobile en d3.js}
+\author{MAHDIR Hamza \and EL AZIZI Amira Mariam}
+\date{Octobre 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Le but du TP est de faire une page web en HTML, SVG et JavaScript avec la librairie d3.js, pour explorer un jeu de données à plusieurs dimensions.
+
+La page contient trois visualisations :
+\begin{itemize}
+  \item une matrice de scatterplots ;
+  \item une vue en coordonnées parallèles ;
+  \item un histogramme d'une dimension, avec une courbe de gaussiennes sur le même graphique.
+\end{itemize}
+
+Quand on sélectionne des voitures dans une vue, elles sont mises en évidence dans les deux autres.
+
+La page marche hors ligne : on ouvre \code{index.html} dans Chrome, sans serveur ni connexion internet.
+
+\capture{vue ensemble.png}{1}{Vue d'ensemble : l'en-tête, la légende des couleurs, le compteur et le début de la matrice}
+
+\section{Le jeu de données}
+
+\subsection{Choix}
+
+On a choisi le dataset \textbf{Automobile} du UCI Machine Learning Repository\footnote{\url{https://archive.ics.uci.edu/dataset/10/automobile}}. Il contient 205 voitures et 26 attributs.
+
+On l'a choisi parce que les données sont faciles à comprendre (prix, taille, moteur, consommation) et que la taille est adaptée à un affichage en SVG.
+
+On a écarté le dataset \textit{Algerian Forest Fires} : il n'a qu'une dizaine d'attributs numériques utiles, et plusieurs indices sont calculés les uns à partir des autres.
+
+\subsection{Contraintes}
+
+Le prof nous a demandé de garder entre 10 et 15 attributs numériques et au moins 200 lignes.
+
+\section{Nettoyage des données}
+
+Les valeurs manquantes sont notées \code{?} dans le fichier. Le tableau \ref{tab:suppression} résume nos choix.
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{l c X}
+\toprule
+\textbf{Colonne} & \textbf{Nb de \code{?}} & \textbf{Décision et raison} \\
+\midrule
+\code{normalized-losses} & 41 & Colonne supprimée : 20\,\% de valeurs manquantes. Supprimer les lignes ferait perdre trop de voitures, et remplacer par la moyenne fausserait la distribution. \\
+\code{bore}, \code{stroke} & 4 & Colonnes supprimées : les valeurs manquent seulement pour 4 Mazda à moteur rotatif. Ces moteurs n'ont pas de piston, donc la valeur n'existe pas. \\
+\code{horsepower}, \code{peak-rpm} & 2 & Colonnes supprimées : les garder avec \code{price} obligerait à supprimer 6 lignes (199 < 200). On a gardé \code{price}. \code{engine-size} est très corrélée à \code{horsepower} ($r = 0{,}81$). \\
+\code{price} & 4 & Les 4 voitures sans prix sont supprimées. Ce sont les seules lignes supprimées. \\
+\code{num-of-doors} & 2 & Colonne supprimée : catégorielle, pas utile pour l'analyse. \\
+\bottomrule
+\end{tabularx}
+\caption{Traitement des valeurs manquantes}
+\label{tab:suppression}
+\end{table}
+
+On a aussi supprimé les attributs catégoriels qui ne servent pas : \code{aspiration}, \code{drive-wheels}, \code{engine-location}, \code{engine-type}, \code{fuel-system}.
+
+L'attribut \code{num-of-cylinders} est écrit en lettres (\code{four}, \code{six}\dots). On l'a converti en nombre.
+
+\textbf{Résultat :} 201 voitures, 12 attributs numériques et 3 catégoriels.
+\begin{itemize}
+  \item Numériques : \code{symboling}, \code{wheel-base}, \code{length}, \code{width}, \code{height}, \code{curb-weight}, \code{num-of-cylinders}, \code{engine-size}, \code{compression-ratio}, \code{city-mpg}, \code{highway-mpg}, \code{price}.
+  \item Catégoriels : \code{make} (affiché au survol), \code{fuel-type} (couleur), \code{body-style}.
+\end{itemize}
+
+Les données nettoyées sont dans \code{data.js}, sous la forme \code{const data = [...]}. Elles sont chargées avec une balise \code{<script>}, ce qui permet d'ouvrir la page sans serveur.
+
+\section{Les visualisations}
+
+\subsection{Matrice de scatterplots}
+
+On compare les 12 dimensions deux à deux dans une matrice 12 $\times$ 12. Chaque ligne a son axe à gauche et chaque colonne son axe en bas. La diagonale affiche le nom des dimensions.
+
+Les noms des dimensions sont affichés en français avec leur unité (par exemple \textit{Prix (USD)}). La taille de la matrice s'adapte à la largeur de la page, pour voir toute la matrice sans défiler.
+
+On peut tracer un rectangle dans une case pour sélectionner des voitures. La sélection est mise en évidence dans toutes les cases en même temps.
+
+Dans la figure \ref{fig:matrice}, on a tracé un rectangle dans la case \textit{Longueur} / \textit{Empattement}. Les voitures sélectionnées restent en couleur dans toutes les cases, les autres passent en gris. La case \textit{Prix (USD)} de la diagonale est encadrée : c'est la dimension affichée dans l'histogramme.
+
+\capture{matrice avec selection.png}{0.75}{Matrice de scatterplots avec un rectangle de sélection\label{fig:matrice}}
+
+\subsection{Coordonnées parallèles}
+
+Chaque axe vertical est une dimension et chaque ligne est une voiture. Les lignes sont transparentes pour mieux voir les zones denses.
+
+On peut sélectionner un intervalle sur un axe. Si on sélectionne sur plusieurs axes, on garde les voitures qui respectent toutes les conditions.
+
+Dans la figure \ref{fig:paralleles}, on a sélectionné la valeur 4 sur l'axe \textit{Nombre de cylindres} : seules les voitures à 4 cylindres restent en couleur. On voit par exemple que les lignes orange (diesel) montent toutes très haut sur l'axe \textit{Taux de compression}.
+
+\capture{coord para avec selection.png}{1}{Coordonnées parallèles avec une sélection sur l'axe Nombre de cylindres\label{fig:paralleles}}
+
+\subsection{Histogramme et courbe de gaussiennes}
+
+L'histogramme montre la distribution d'une dimension. La courbe est tracée sur le même graphique.
+
+\paragraph{Les colonnes.} On les calcule à la main, sans fonction prédéfinie comme \code{d3.bin()}. Avec $n$ colonnes, le pas est $(max - min) / n$, et l'indice d'une valeur $v$ est la partie entière de $(v - min) / pas$. Toutes les colonnes sont de la forme $[a, b[$, sauf la dernière qui est $[a, b]$ : sinon, la valeur maximale ne serait comptée dans aucune colonne. On vérifie que la somme des effectifs fait bien 201.
+
+\paragraph{La courbe.} Pour chaque voiture, on place une gaussienne d'amplitude 1 centrée sur sa valeur. La courbe est la somme de ces gaussiennes :
+\[
+f(x) = \sum_{i=1}^{201} \exp\left(-\frac{1}{2}\left(\frac{x - x_i}{h}\right)^2\right)
+\]
+où $h$ est la largeur choisie par l'utilisateur. On calcule $f(x)$ tous les 3 pixels le long de l'axe horizontal. La courbe a sa propre échelle (axe de droite), pour que son maximum touche le haut du graphique.
+
+\paragraph{Les réglages.}
+\begin{itemize}
+  \item Le slider \textit{Nombre de colonnes} va de 2 à 50.
+  \item Le slider \textit{Largeur des gaussiennes} va de 1\,\% à 25\,\% de l'étendue de la dimension ($max - min$). Ses bornes changent quand on change de dimension.
+  \item La valeur de chaque slider est affichée à côté.
+\end{itemize}
+
+On peut aussi tracer un intervalle sur l'histogramme pour sélectionner des voitures.
+
+La figure \ref{fig:histogramme} montre la dimension \textit{Poids à vide (lb)} avec 15 colonnes et une largeur de gaussienne de 128,9. L'axe de gauche donne le nombre de voitures, l'axe de droite (violet) l'échelle de la courbe. Les colonnes sont empilées par carburant : bleu pour l'essence, orange pour le diesel.
+
+\capture{histogramme.png}{1}{Histogramme et courbe de gaussiennes pour le poids à vide\label{fig:histogramme}}
+
+\subsection{Choix de la dimension}
+
+On peut choisir la dimension de l'histogramme de trois façons : avec le menu déroulant, en cliquant sur le titre d'un axe des coordonnées parallèles, ou en cliquant sur une case de la diagonale de la matrice. Les trois restent synchronisés.
+
+\section{Sélection liée entre les vues}
+
+Quand on sélectionne des voitures dans une vue, elles restent en couleur dans les trois vues, et les autres passent en gris.
+
+\begin{itemize}
+  \item Bleu : essence. Orange : diesel. Gris : voitures non sélectionnées.
+  \item Une nouvelle sélection remplace la précédente, et le rectangle de l'ancienne vue s'efface.
+  \item Le bouton \textit{Effacer la sélection} annule la sélection.
+  \item Un compteur affiche le nombre de voitures sélectionnées.
+  \item Au survol d'un point ou d'une ligne, on voit la marque, le prix et le carburant.
+\end{itemize}
+
+Les figures \ref{fig:matrice} et \ref{fig:paralleles} montrent cette mise en évidence : les voitures sélectionnées gardent leur couleur et les autres sont en gris.
+
+Pour le code, chaque vue a son fichier (\code{splom.js}, \code{parallel.js}, \code{histogram.js}). Le fichier \code{main.js} garde la sélection et prévient toutes les vues quand elle change. Les vues ne se parlent jamais directement.
+
+\section{Exemple d'exploration}
+
+On choisit la dimension \code{compression-ratio} et une petite largeur de gaussienne. La courbe montre deux groupes : la plupart des voitures entre 7 et 11,5, et un petit groupe entre 21 et 23.
+
+En sélectionnant ce petit groupe sur l'histogramme, on retrouve exactement les 20 voitures diesel. Dans les autres vues, on peut alors voir leurs autres caractéristiques.
+
+Avec une grande largeur, les deux groupes se mélangent : le choix de la largeur change ce qu'on voit.
+
+\section{Liens avec le cours}
+
+\begin{itemize}
+  \item \textbf{Histogramme} (slides 1, p.~45--46) : le nombre de colonnes change ce qu'on voit (\textit{Bins matter}). D'où le slider du nombre de colonnes.
+  \item \textbf{Densité par noyau} (slides 1, p.~47--48) : la formule avec un noyau gaussien $C \cdot e^{-\frac{1}{2}\left(\frac{x - x_i}{h}\right)^2}$. Notre courbe utilise $C = 1$. Le choix de la largeur $h$ est difficile (\textit{Bandwidth choice is an art}), d'où le slider de largeur.
+  \item \textbf{Matrice de scatterplots et vues coordonnées} (slides 2, p.~20--23) : comparaison deux à deux et sélection liée entre plusieurs vues.
+  \item \textbf{Coordonnées parallèles} (slides 2, p.~25--34) : transparence des lignes et sélection sur les axes (\textit{brushing}).
+  \item \textbf{Couleurs} (slides 1) : une couleur par catégorie, peu de couleurs, pas de rouge/vert, et la couleur réservée à la mise en évidence.
+\end{itemize}
+
+\section{Conclusion}
+
+Les trois vues sont faites et la sélection est liée entre elles. Les consignes du prof sont respectées : colonnes calculées à la main, dernier intervalle fermé, gaussiennes d'amplitude 1, courbe à sa propre échelle et page qui marche hors ligne.
+
+\paragraph{Limites.} Pour garder \code{price} avec au moins 200 lignes, on a perdu \code{horsepower} et \code{peak-rpm}. Pour les dimensions qui ont peu de valeurs (\code{symboling}, \code{num-of-cylinders}), plusieurs points se superposent dans la matrice.
+
+\paragraph{Amélioration possible.} Permettre de changer l'ordre des axes des coordonnées parallèles, pour comparer d'autres dimensions voisines.
+
+\end{document}
