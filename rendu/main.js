@@ -40,7 +40,6 @@ const couleur = d3.scaleOrdinal()
 const couleurEfface = "#cccccc";
 const couleurDimension = "#16789b";
 
-// Libellés séparés des clés utilisées pour accéder aux données.
 const libellesDimensions = {
  "symboling": ["Risque", "assurance"],
  "wheel-base": ["Empattement", "(pouces)"],
@@ -51,8 +50,8 @@ const libellesDimensions = {
  "num-of-cylinders": ["Nombre de", "cylindres"],
  "engine-size": ["Cylindrée", "(pouces³)"],
  "compression-ratio": ["Taux de", "compression"],
- "city-mpg": ["Rendement ville", "(mpg)"],
- "highway-mpg": ["Rendement route", "(mpg)"],
+ "city-mpg": ["Rendement", "ville (mpg)"],
+ "highway-mpg": ["Rendement", "route (mpg)"],
  "price": ["Prix", "(USD)"]
 };
 
@@ -154,6 +153,15 @@ window.addEventListener("load", function () {
   setSelection(null, "reset");
  });
  window.addEventListener("scroll", cacherTooltip, true);
+ document.querySelectorAll('a[href^="#"]').forEach(function (lien) {
+  lien.addEventListener("click", function (event) {
+   const cible = document.getElementById(lien.getAttribute("href").slice(1));
+   if (cible !== null) {
+    event.preventDefault();
+    cible.scrollIntoView({ behavior: "smooth" });
+   }
+  });
+ });
  majCompteurSelection();
 	vues.forEach(function (vue) {
 		vue.dessiner();

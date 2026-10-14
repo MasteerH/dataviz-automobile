@@ -1,6 +1,6 @@
 
 const paraMarge = { haut: 60, droite: 65, bas: 25, gauche: 65 };
-const paraLargeurMin = 1430;
+const paraLargeurMin = 900;
 const paraHauteur = 360;
 const paraDemiBrush = 10;
 
@@ -156,7 +156,6 @@ function dessinerParallel() {
 		.attr("class", "para-brush")
 		.call(paraBrush);
 
- // Chercher la ligne la plus proche, même lorsque le pointeur est sur un brush.
  svg.on("pointermove.tooltip", function (event) {
   if (event.buttons) { cacherTooltip(); return; }
   const [x, y] = d3.pointer(event, this);

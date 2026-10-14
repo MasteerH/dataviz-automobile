@@ -1,6 +1,6 @@
 
 const splomMarge = { haut: 10, droite: 10, bas: 40, gauche: 60 };
-const splomCote = 1440;
+const splomCote = Math.max(720, Math.min(1440, document.getElementById("splom").clientWidth - splomMarge.gauche - splomMarge.droite - 24));
 const splomTaille = splomCote / dimensions.length;
 const splomEspace = 5;
 const splomRayon = 2.2;
@@ -205,7 +205,6 @@ function dessinerSplom() {
 
 	nuages.call(splomBrush);
 
- // Écouter la cellule : le brush couvre les points et reçoit aussi le survol.
  nuages.on("pointermove.tooltip", function (event, p) {
   if (event.buttons) { cacherTooltip(); return; }
   const [x, y] = d3.pointer(event, this);
