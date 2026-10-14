@@ -9,7 +9,6 @@ Matrice scatterplot, coordonnées parallèles et histogramme avec courbe de dens
 
 - rendu : le dossier à déposer pour le prof (ouvrir index.html dans Chrome)
 - automobile : les données brutes du UCI
-- scripts : le script qui prépare les données et génère rendu/data.js
 - NOTES_RAPPORT.md : nos justifications pour le rapport
 
 
