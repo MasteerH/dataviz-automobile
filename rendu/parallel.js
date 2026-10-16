@@ -87,6 +87,7 @@ function dessinerParallel() {
 
 	const svg = d3.select("#parallel")
 		.append("svg")
+        .attr("viewBox", "0 0 " + (paraLargeur + paraMarge.gauche + paraMarge.droite) + " " + (paraHauteur + paraMarge.haut + paraMarge.bas))
 		.attr("width", paraLargeur + paraMarge.gauche + paraMarge.droite)
 		.attr("height", paraHauteur + paraMarge.haut + paraMarge.bas)
 		.style("user-select", "none")
@@ -186,6 +187,7 @@ function majParallel(source) {
 	}
 
 	const lignes = d3.select("#parallel").selectAll(".para-lignes path")
+  .attr("display", function (d) { return filtreSelection && !estSelectionnee(d) ? "none" : null; })
 		.attr("stroke", function (d) {
 			return estSelectionnee(d) ? couleur(d["fuel-type"]) : couleurEfface;
 		})

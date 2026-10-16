@@ -17,7 +17,23 @@
       <a href="#histo-title">Histogramme</a>
     </nav>
   </header>
-  <aside class="guide"><p>On peut sélectionner des voitures dans un graphique et les retrouver dans les autres. La couleur représente le carburant : essence ou diesel.</p></aside>
+  <aside class="guide"><p>Choisissez les voitures à afficher avec les filtres ci-dessous. Vous pouvez aussi sélectionner directement des points ou des intervalles dans les graphiques.</p></aside>
+  <main id="exploration">
+    <section class="panel criteria-panel" aria-labelledby="criteria-title">
+      <h2 id="criteria-title">Quelles voitures voulez-vous voir ?</h2>
+      <p>Choisissez un carburant et, si besoin, une plage de valeurs. Par exemple : Diesel, ou Prix entre 10 000 et 20 000 USD.</p>
+      <form id="criteria-form">
+        <div class="criteria-grid">
+          <div class="control"><label for="criteria-fuel">Carburant</label><select id="criteria-fuel"><option value="">Tous les carburants</option><option value="gas">Essence</option><option value="diesel">Diesel</option></select></div>
+          <div class="control"><label for="criteria-dimension">Limiter une valeur (facultatif)</label><select id="criteria-dimension"><option value="">Aucune limite numérique</option></select></div>
+          <div class="control"><label for="criteria-min">Minimum inclus</label><input id="criteria-min" type="number" step="any" disabled aria-describedby="criteria-range"></div>
+          <div class="control"><label for="criteria-max">Maximum inclus</label><input id="criteria-max" type="number" step="any" disabled aria-describedby="criteria-range"></div>
+        </div>
+        <p id="criteria-range" class="criteria-hint">Les limites numériques sont facultatives.</p>
+        <div class="criteria-actions"><button type="submit" class="primary-button">Afficher ces voitures</button><button type="button" id="criteria-reset">Tout afficher</button><span id="criteria-preview" role="status" aria-live="polite"></span></div>
+        <p id="criteria-result" role="status" aria-live="polite"></p>
+      </form>
+    </section>
   <div class="selection-toolbar">
     <ul class="legend" aria-label="Couleurs des carburants">
       <li><span class="legend-swatch" data-fuel="gas" aria-hidden="true"></span>Essence</li>
@@ -25,21 +41,54 @@
       <li><span class="legend-muted" aria-hidden="true"></span>Non sélectionnées</li>
     </ul>
     <div class="selection-actions"><p id="selection-count" role="status" aria-live="polite"></p><button id="reset-selection" type="button" disabled>Effacer la sélection</button></div>
+    <label class="filter-control"><input id="filter-selection" type="checkbox"> Afficher uniquement la sélection</label>
+    <p id="filter-status" role="status" aria-live="polite">Toutes les voitures restent visibles.</p>
   </div>
-  <main id="exploration">
+    <section class="panel overview" aria-labelledby="summary-scope">
+      <h2 id="summary-scope">Résumé des 201 voitures</h2>
+      <dl id="selection-summary" class="summary-grid">
+        <div><dt>Essence</dt><dd id="summary-gas">—</dd></div>
+        <div><dt>Diesel</dt><dd id="summary-diesel">—</dd></div>
+        <div><dt>Prix médian</dt><dd id="summary-price">—</dd></div>
+        <div><dt>Rendement médian en ville</dt><dd id="summary-mpg">—</dd></div>
+      </dl>
+      <details class="exploration-help">
+        <summary>Quelques pistes pour explorer les données</summary>
+        <p>Ces questions servent de point de départ. Utilisez les sélections pour vérifier vos observations.</p>
+        <div class="exploration-buttons">
+          <button type="button" data-explore="compression-ratio">Comparer les taux de compression</button>
+          <button type="button" data-explore="price">Explorer la répartition des prix</button>
+          <button type="button" data-explore="city-mpg">Explorer le rendement en ville</button>
+        </div>
+        <p>Dans la matrice, comparez le poids à vide au rendement en ville : les voitures plus lourdes parcourent-elles moins de miles par gallon ? Dans les parallèles, sélectionnez les taux de compression élevés : quel carburant domine ?</p>
+      </details>
+    </section>
     <section class="panel" aria-labelledby="splom-title">
       <h2 id="splom-title">Matrice de scatterplots</h2>
+      <div class="view-filter"><button type="button" data-toggle-filter aria-pressed="false">Afficher uniquement la sélection</button><span class="filter-feedback"></span></div>
       <p>On compare les dimensions deux à deux. On peut tracer un rectangle pour sélectionner des voitures, et cliquer sur la diagonale pour choisir la dimension de l’histogramme.</p>
+      <details id="pair-detail" class="pair-detail">
+        <summary>Agrandir une paire de dimensions</summary>
+        <p>Choisissez deux axes ou double-cliquez sur une cellule de la matrice. Tracez un rectangle dans le grand graphique pour sélectionner les mêmes voitures dans toutes les vues.</p>
+        <div class="pair-controls">
+          <div class="control"><label for="pair-x">Axe horizontal</label><select id="pair-x"></select></div>
+          <div class="control"><label for="pair-y">Axe vertical</label><select id="pair-y"></select></div>
+          <button id="pair-swap" type="button">Permuter les axes</button>
+        </div>
+        <div id="pair-chart" class="chart-container"></div>
+      </details>
       <div id="splom" class="chart-container"><p class="placeholder">Matrice de scatterplots — graphique à venir</p></div>
     </section>
     <section class="panel" aria-labelledby="parallel-title">
       <h2 id="parallel-title">Coordonnées parallèles</h2>
+      <div class="view-filter"><button type="button" data-toggle-filter aria-pressed="false">Afficher uniquement la sélection</button><span class="filter-feedback"></span></div>
       <p>Chaque ligne représente une voiture. On peut sélectionner un intervalle sur un axe. Si on sélectionne sur plusieurs axes, les voitures gardées respectent toutes les conditions. On peut aussi cliquer sur un titre pour choisir la dimension de l’histogramme.</p>
       <p>Chaque axe a sa propre échelle. Un rendement élevé en mpg veut dire plus de miles parcourus avec un gallon de carburant.</p>
       <div id="parallel" class="chart-container"><p class="placeholder">Coordonnées parallèles — graphique à venir</p></div>
     </section>
     <section class="panel histogram-panel" aria-labelledby="histo-title">
       <h2 id="histo-title">Histogramme et courbe de gaussiennes</h2>
+      <div class="view-filter"><button type="button" data-toggle-filter aria-pressed="false">Afficher uniquement la sélection</button><span class="filter-feedback"></span></div>
       <div class="controls" aria-label="Réglages de l’histogramme">
         <div class="control">
           <label for="dimension-select">Dimension affichée</label>
@@ -72,7 +121,7 @@
           <output id="bandwidth-value" for="bandwidth-slider">À définir selon la dimension</output>
         </div>
       </div>
-      <p class="histogram-note">On peut choisir la dimension, le nombre de colonnes et la largeur des gaussiennes. On peut aussi tracer un intervalle pour sélectionner des voitures. Les parties colorées montrent les voitures sélectionnées, le gris montre les autres. Le dernier intervalle inclut la valeur maximale. La courbe violette est la somme des gaussiennes d’amplitude 1 des 201 voitures. Elle se lit sur l’axe de droite et son maximum atteint le haut du graphique. Plus la largeur est grande, plus la courbe est lisse.</p>
+      <p class="histogram-note">Survolez les colonnes pour lire les intervalles et les effectifs. Le dernier intervalle inclut le maximum. Les couleurs indiquent les voitures sélectionnées par carburant ; le gris conserve les autres effectifs. Le mode « Afficher uniquement la sélection » masque ce contexte et recalcule la courbe sur le groupe visible. La courbe violette est une somme de gaussiennes non normalisée : son axe de droite est indépendant des effectifs à gauche. Son maximum atteint le haut du graphique ; une intersection avec une barre ne signifie pas une égalité. Une largeur plus grande augmente le lissage.</p>
       <div id="histo" class="chart-container"><p class="placeholder">Histogramme et gaussiennes — graphique à venir</p></div>
     </section>
   </main>
@@ -87,6 +136,7 @@
   <script src="d3.v7.min.js"></script>
   <script src="main.js"></script>
   <script src="splom.js"></script>
+  <script src="pair.js"></script>
   <script src="parallel.js"></script>
   <script src="kde.js"></script>
   <script src="histogram.js"></script>

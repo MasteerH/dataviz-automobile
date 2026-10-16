@@ -51,7 +51,7 @@ Quand on sélectionne des voitures dans une vue, elles sont mises en évidence d
 
 La page marche hors ligne : on ouvre \code{index.html} dans Chrome, sans serveur ni connexion internet.
 
-\capture{vue ensemble.png}{1}{Vue d'ensemble : l'en-tête, la légende des couleurs, le compteur et le début de la matrice}
+\capture{vue ensemble.png}{1}{Vue d'ensemble : en-tête, filtres par critères, légende et résumé de la sélection}
 
 \section{Le jeu de données}
 
@@ -128,13 +128,15 @@ Dans la figure \ref{fig:paralleles}, on a sélectionné la valeur 4 sur l'axe \t
 
 L'histogramme montre la distribution d'une dimension. La courbe est tracée sur le même graphique.
 
-\paragraph{Les colonnes.} On les calcule à la main, sans fonction prédéfinie comme \code{d3.bin()}. Avec $n$ colonnes, le pas est $(max - min) / n$, et l'indice d'une valeur $v$ est la partie entière de $(v - min) / pas$. Toutes les colonnes sont de la forme $[a, b[$, sauf la dernière qui est $[a, b]$ : sinon, la valeur maximale ne serait comptée dans aucune colonne. On vérifie que la somme des effectifs fait bien 201.
+\paragraph{Les colonnes.} On les calcule à la main, sans fonction prédéfinie comme \code{d3.bin()}. Avec $n$ colonnes, le pas est $(max - min) / n$, et l'indice d'une valeur $v$ est la partie entière de $(v - min) / pas$. Toutes les colonnes sont de la forme $[a, b[$, sauf la dernière qui est $[a, b]$ : sinon, la valeur maximale ne serait comptée dans aucune colonne. On vérifie que la somme des effectifs fait bien 201. Après le calcul de l'indice, on contrôle les bornes réelles de la colonne pour corriger les erreurs d'arrondi des nombres décimaux ; une valeur égale à la borne droite passe dans la colonne suivante, sauf pour la dernière.
 
 \paragraph{La courbe.} Pour chaque voiture, on place une gaussienne d'amplitude 1 centrée sur sa valeur. La courbe est la somme de ces gaussiennes :
 \[
 f(x) = \sum_{i=1}^{201} \exp\left(-\frac{1}{2}\left(\frac{x - x_i}{h}\right)^2\right)
 \]
 où $h$ est la largeur choisie par l'utilisateur. On calcule $f(x)$ tous les 3 pixels le long de l'axe horizontal. La courbe a sa propre échelle (axe de droite), pour que son maximum touche le haut du graphique.
+
+Cette somme n'est pas une densité de probabilité normalisée : nous n'appliquons pas le facteur $1/(nh)$, conformément à la consigne orale. Les deux axes verticaux sont indépendants ; une intersection de la courbe avec une colonne ne signifie pas une égalité d'effectifs. Sans filtre, la courbe porte sur les 201 voitures. En mode filtré, la somme porte sur les voitures sélectionnées.
 
 \paragraph{Les réglages.}
 \begin{itemize}
@@ -169,6 +171,14 @@ Les figures \ref{fig:matrice} et \ref{fig:paralleles} montrent cette mise en év
 
 Pour le code, chaque vue a son fichier (\code{splom.js}, \code{parallel.js}, \code{histogram.js}). Le fichier \code{main.js} garde la sélection et prévient toutes les vues quand elle change. Les vues ne se parlent jamais directement.
 
+\subsection{Brushing, filtrage et vue détaillée}
+
+Pour ne pas imposer l'apprentissage du brushing, un formulaire permet de choisir le carburant et une plage numérique facultative. Les bornes sont incluses ; une borne vide ne limite pas la plage. Le nombre de correspondances est affiché avant validation. Le bouton \textit{Afficher ces voitures} applique le groupe à toutes les vues, et \textit{Tout afficher} annule les critères. Une sélection directe dans un graphique remplace les critères du formulaire.
+
+Le brushing désigne la sélection par rectangle ou intervalle. Le mode \textit{Afficher uniquement la sélection} masque les autres points et lignes et retire le contexte gris de l'histogramme. Les échelles de position et d'effectifs restent celles du jeu complet pour faciliter la comparaison. La courbe est recalculée sur la sélection. Une nouvelle sélection remplace la précédente ; les filtres de plusieurs axes parallèles se combinent toujours par intersection. Le bouton de réinitialisation restaure toutes les voitures et désactive le filtrage.
+
+Une vue agrandie permet de choisir deux dimensions, de permuter les axes et de sélectionner les points en détail. Elle complète la matrice sans la remplacer. Le résumé donne les effectifs par carburant et les médianes du prix et du rendement en ville. Une sélection vide est signalée et ses médianes sont indisponibles. L'histogramme adapte sa largeur en conservant l'intervalle sélectionné.
+
 \section{Exemple d'exploration}
 
 On choisit la dimension \code{compression-ratio} et une petite largeur de gaussienne. La courbe montre deux groupes : la plupart des voitures entre 7 et 11,5, et un petit groupe entre 21 et 23.
@@ -187,11 +197,19 @@ Avec une grande largeur, les deux groupes se mélangent : le choix de la largeur
   \item \textbf{Couleurs} (slides 1) : une couleur par catégorie, peu de couleurs, pas de rouge/vert, et la couleur réservée à la mise en évidence.
 \end{itemize}
 
+\section{Vérifications techniques}
+
+Les données exportées ont été comparées aux données brutes : 201 voitures, 15 colonnes et aucune valeur manquante. Dans Chrome, avec le réseau désactivé, les 588 combinaisons des 12 dimensions et des nombres de colonnes de 2 à 50 ont été vérifiées : effectif total de 201, appartenance correcte aux intervalles et maximum dans la dernière colonne. Les sliders, les sélections liées, leur intersection sur plusieurs axes, le filtrage, les cas vides et la réinitialisation ont également été contrôlés. Les textes de la diagonale sont ajustés pour rester dans les cellules. Les captures correspondent à la version finale de l'interface.
+
+\section{Évaluation utilisateur à réaliser}
+
+Faire essayer à quelques personnes les tâches suivantes : identifier les carburants, sélectionner les taux de compression élevés, activer le filtrage, lire le prix médian puis annuler les filtres. Relever les erreurs et hésitations avant de corriger l'interface. Les résultats de ces essais humains restent à collecter ; ils ne sont pas remplacés par les vérifications automatisées.
+
 \section{Conclusion}
 
 Les trois vues sont faites et la sélection est liée entre elles. Les consignes du prof sont respectées : colonnes calculées à la main, dernier intervalle fermé, gaussiennes d'amplitude 1, courbe à sa propre échelle et page qui marche hors ligne.
 
-\paragraph{Limites.} Pour garder \code{price} avec au moins 200 lignes, on a perdu \code{horsepower} et \code{peak-rpm}. Pour les dimensions qui ont peu de valeurs (\code{symboling}, \code{num-of-cylinders}), plusieurs points se superposent dans la matrice.
+\paragraph{Limites.} Pour garder \code{price} avec au moins 200 lignes, on a perdu \code{horsepower} et \code{peak-rpm}. Pour les dimensions qui ont peu de valeurs (\code{symboling}, \code{num-of-cylinders}), plusieurs points se superposent dans la matrice. Sur un petit écran, la matrice donne une vue d'ensemble : la vue agrandie d'une paire permet de lire les détails.
 
 \paragraph{Amélioration possible.} Permettre de changer l'ordre des axes des coordonnées parallèles, pour comparer d'autres dimensions voisines.
 

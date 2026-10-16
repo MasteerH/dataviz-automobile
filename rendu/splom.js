@@ -93,6 +93,7 @@ function splomFinBrush(event, p) {
 function dessinerSplom() {
 	const svg = d3.select("#splom")
 		.append("svg")
+        .attr("viewBox", "0 0 " + (splomCote + splomMarge.gauche + splomMarge.droite) + " " + (splomCote + splomMarge.haut + splomMarge.bas))
 		.attr("width", splomCote + splomMarge.gauche + splomMarge.droite)
 		.attr("height", splomCote + splomMarge.haut + splomMarge.bas)
 		.style("margin", "0 auto")
@@ -109,7 +110,10 @@ function dessinerSplom() {
 			return "translate(" + (i * splomTaille) + "," + splomCote + ")";
 		})
 		.each(function (dim) {
-			d3.select(this).call(d3.axisBottom(splomX[dim]).ticks(2).tickFormat(formatAxe).tickSize(3));
+			d3.select(this).call(d3.axisBottom(splomX[dim]).tickValues(etendues[dim]).tickFormat(formatAxe).tickSize(3));
+   d3.select(this).selectAll(".tick text").attr("text-anchor", function (valeur) {
+    return valeur === etendues[dim][0] ? "start" : "end";
+   });
 		});
 
 	svg.selectAll(".splom-axe-y")
@@ -125,7 +129,7 @@ function dessinerSplom() {
 		});
 
 	svg.selectAll(".splom-axe-x text, .splom-axe-y text")
-		.style("font-size", "12px");
+		.style("font-size", Math.min(12, splomTaille / 7) + "px");
 
 	const cellules = svg.selectAll(".splom-cellule")
 		.data(splomPaires())
@@ -184,6 +188,13 @@ function dessinerSplom() {
 		return p.x !== p.y;
 	});
 
+ diagonale.selectAll(".splom-nom").each(function () {
+  const largeur = this.getBBox().width;
+  if (largeur > splomTaille - 8) {
+   d3.select(this).style("font-size", (12 * (splomTaille - 8) / largeur) + "px");
+  }
+ });
+
 	nuages.each(function (p) {
 		d3.select(this).selectAll("circle")
 			.data(voitures)
@@ -204,6 +215,7 @@ function dessinerSplom() {
 		.on("end", splomFinBrush);
 
 	nuages.call(splomBrush);
+ nuages.on("dblclick.pair", function (event, p) { event.preventDefault(); pairChoisir(p.x, p.y); });
 
  nuages.on("pointermove.tooltip", function (event, p) {
   if (event.buttons) { cacherTooltip(); return; }
@@ -231,6 +243,7 @@ function majSplom(source) {
 	}
 
 	d3.select("#splom").selectAll("circle")
+  .attr("display", function (d) { return filtreSelection && !estSelectionnee(d) ? "none" : null; })
 		.attr("fill", function (d) {
 			return estSelectionnee(d) ? couleur(d["fuel-type"]) : couleurEfface;
 		})

@@ -60,7 +60,16 @@ function majCompteurSelection() {
  compteur.textContent = selection === null
   ? "Aucune sélection active · " + data.length + " voitures affichées"
   : selection.size + " voiture" + (selection.size === 1 ? "" : "s") + " sélectionnée" + (selection.size === 1 ? "" : "s") + " sur " + data.length;
- document.getElementById("reset-selection").disabled = selection === null;
+ document.getElementById("reset-selection").disabled = selection === null && !filtreSelection;
+ const groupe = selection === null ? data : data.filter(estSelectionnee);
+ const resume = document.getElementById("selection-summary");
+ if (resume) {
+  document.getElementById("summary-scope").textContent = selection === null ? "Résumé des 201 voitures" : "Résumé de la sélection";
+  document.getElementById("summary-gas").textContent = groupe.filter(function (d) { return d["fuel-type"] === "gas"; }).length;
+  document.getElementById("summary-diesel").textContent = groupe.filter(function (d) { return d["fuel-type"] === "diesel"; }).length;
+  document.getElementById("summary-price").textContent = groupe.length ? d3.median(groupe, function (d) { return d.price; }).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " USD" : "—";
+  document.getElementById("summary-mpg").textContent = groupe.length ? d3.median(groupe, function (d) { return d["city-mpg"]; }).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " mpg" : "—";
+ }
 }
 
 function cacherTooltip() {
@@ -68,8 +77,12 @@ function cacherTooltip() {
 }
 
 function afficherTooltip(event, d) {
+ afficherTexteTooltip(event, d.make + " · " + d.price.toLocaleString("fr-FR") + " USD · " + (d["fuel-type"] === "gas" ? "Essence" : "Diesel"));
+}
+
+function afficherTexteTooltip(event, texte) {
  const tip = document.getElementById("tooltip");
- tip.textContent = d.make + " · " + d.price.toLocaleString("fr-FR") + " USD · " + (d["fuel-type"] === "gas" ? "Essence" : "Diesel");
+ tip.textContent = texte;
  tip.hidden = false;
  tip.style.left = Math.max(8, Math.min(event.clientX + 14, window.innerWidth - tip.offsetWidth - 8)) + "px";
  tip.style.top = Math.max(8, Math.min(event.clientY + 14, window.innerHeight - tip.offsetHeight - 8)) + "px";
@@ -96,6 +109,8 @@ function couperNom(nom) {
 
 
 let selection = null;
+let filtreSelection = false;
+let sourceSelection = null;
 let dimensionCourante = "price";
 
 
@@ -115,16 +130,125 @@ function estSelectionnee(d) {
 
 
 function setSelection(ids, source) {
+ sourceSelection = source;
+ if (source !== "criteria") {
+  document.getElementById("criteria-form").reset();
+  criteriaConfigurerDimension();
+  document.getElementById("criteria-result").textContent = ids === null ? "Toutes les voitures sont affichées." : "Sélection effectuée dans un graphique. Le formulaire permet de choisir un nouveau groupe.";
+ }
 	if (ids === null) {
 		selection = null;
 	} else {
 		selection = new Set(ids);
 	}
+ if (selection === null) filtreSelection = false;
 	vues.forEach(function (vue) {
 		vue.mettreAJour(source);
 	});
  cacherTooltip();
  majCompteurSelection();
+ majEtatFiltre();
+}
+
+function majEtatFiltre() {
+ const caseFiltre = document.getElementById("filter-selection");
+ caseFiltre.checked = filtreSelection;
+ caseFiltre.disabled = false;
+ let texte;
+ if (filtreSelection && selection === null) {
+  texte = "Filtrage activé : tracez un rectangle ou un intervalle dans un graphique pour garder uniquement les voitures choisies. En attendant, les 201 voitures restent visibles.";
+ } else if (filtreSelection) {
+  texte = "Filtre actif : " + selection.size + " voitures visibles sur " + data.length + ". La courbe porte sur ce groupe. Désactivez le filtre pour revoir les autres voitures.";
+ } else if (selection !== null) {
+  texte = selection.size + " voitures sélectionnées. Activez le filtre pour masquer les autres voitures.";
+ } else {
+  texte = "Tracez un rectangle ou un intervalle pour sélectionner des voitures. Activez le filtre pour afficher uniquement ce groupe.";
+ }
+ document.getElementById("filter-status").textContent = texte;
+ document.querySelectorAll("[data-toggle-filter]").forEach(function (bouton) {
+  bouton.setAttribute("aria-pressed", String(filtreSelection));
+  bouton.textContent = filtreSelection ? "Désactiver le filtre" : "Afficher uniquement la sélection";
+ });
+ document.querySelectorAll(".filter-feedback").forEach(function (message) {
+  message.textContent = texte;
+ });
+}
+
+function setFiltreSelection(actif) {
+ filtreSelection = actif;
+ vues.forEach(function (vue) { vue.mettreAJour(sourceSelection); });
+ majEtatFiltre();
+ majCompteurSelection();
+ cacherTooltip();
+ if (sourceSelection === "criteria" && selection !== null) {
+  document.getElementById("criteria-result").textContent = actif
+   ? "Filtre appliqué : " + selection.size + " voitures affichées dans tous les graphiques."
+   : "Filtre désactivé : les 201 voitures sont visibles ; le groupe choisi reste en couleur.";
+ }
+}
+
+function criteriaConfigurerDimension() {
+ const dim = document.getElementById("criteria-dimension").value;
+ const minimum = document.getElementById("criteria-min");
+ const maximum = document.getElementById("criteria-max");
+ minimum.disabled = maximum.disabled = !dim;
+ minimum.value = maximum.value = "";
+ maximum.setCustomValidity("");
+ if (dim) {
+  minimum.placeholder = String(etendues[dim][0]);
+  maximum.placeholder = String(etendues[dim][1]);
+  document.getElementById("criteria-range").textContent = libellesDimensions[dim].join(" ") + " : valeurs observées de " + etendues[dim][0].toLocaleString("fr-FR") + " à " + etendues[dim][1].toLocaleString("fr-FR") + ". Laissez une borne vide pour ne pas la limiter.";
+ } else {
+  minimum.placeholder = maximum.placeholder = "";
+  document.getElementById("criteria-range").textContent = "Les limites numériques sont facultatives.";
+ }
+ criteriaPrevisualiser();
+}
+
+function criteriaLire() {
+ const carburant = document.getElementById("criteria-fuel").value;
+ const dim = document.getElementById("criteria-dimension").value;
+ const minInput = document.getElementById("criteria-min");
+ const maxInput = document.getElementById("criteria-max");
+ const minimum = dim && minInput.value !== "" ? minInput.valueAsNumber : -Infinity;
+ const maximum = dim && maxInput.value !== "" ? maxInput.valueAsNumber : Infinity;
+ maxInput.setCustomValidity(minimum > maximum ? "Le maximum doit être supérieur ou égal au minimum." : "");
+ return { valide: minimum <= maximum && !minInput.validity.badInput && !maxInput.validity.badInput,
+  actif: Boolean(carburant || (dim && (minInput.value !== "" || maxInput.value !== ""))),
+  voitures: data.filter(function (d) { return (!carburant || d["fuel-type"] === carburant) && (!dim || (d[dim] >= minimum && d[dim] <= maximum)); }) };
+}
+
+function criteriaPrevisualiser() {
+ const criteres = criteriaLire();
+ document.getElementById("criteria-preview").textContent = criteres.valide
+  ? criteres.voitures.length + " voitures correspondent à ces critères."
+  : "Vérifiez vos limites : le minimum doit être inférieur ou égal au maximum.";
+}
+
+function criteriaInitialiser() {
+ const menu = document.getElementById("criteria-dimension");
+ dimensions.forEach(function (dim) {
+  const option = document.createElement("option");
+  option.value = dim;
+  option.textContent = libellesDimensions[dim].join(" ");
+  menu.appendChild(option);
+ });
+ menu.addEventListener("change", criteriaConfigurerDimension);
+ document.getElementById("criteria-form").addEventListener("input", criteriaPrevisualiser);
+ document.getElementById("criteria-fuel").addEventListener("change", criteriaPrevisualiser);
+ document.getElementById("criteria-reset").addEventListener("click", function () { setSelection(null, "reset"); });
+ document.getElementById("criteria-form").addEventListener("submit", function (event) {
+  event.preventDefault();
+  const criteres = criteriaLire();
+  if (!criteres.valide || !event.target.reportValidity()) return;
+  if (!criteres.actif) { setSelection(null, "reset"); return; }
+  setSelection(criteres.voitures.map(function (d) { return d.id; }), "criteria");
+  setFiltreSelection(true);
+  document.getElementById("criteria-result").textContent = criteres.voitures.length
+   ? "Filtre appliqué : " + criteres.voitures.length + " voitures affichées dans tous les graphiques."
+   : "Aucune voiture ne correspond. Élargissez les limites ou cliquez sur Tout afficher.";
+ });
+ criteriaConfigurerDimension();
 }
 
 
@@ -143,6 +267,20 @@ function setDimension(nom) {
 
 
 window.addEventListener("load", function () {
+ criteriaInitialiser();
+ document.getElementById("filter-selection").addEventListener("change", function (event) {
+  setFiltreSelection(event.target.checked);
+ });
+ document.querySelectorAll("[data-toggle-filter]").forEach(function (bouton) {
+  bouton.addEventListener("click", function () { setFiltreSelection(!filtreSelection); });
+ });
+ majEtatFiltre();
+ document.querySelectorAll("[data-explore]").forEach(function (bouton) {
+  bouton.addEventListener("click", function () {
+   setDimension(bouton.dataset.explore);
+   document.getElementById("histo-title").scrollIntoView({ block: "start" });
+  });
+ });
  document.querySelectorAll(".legend-swatch").forEach(function (pastille) {
   pastille.style.backgroundColor = couleur(pastille.dataset.fuel);
  });

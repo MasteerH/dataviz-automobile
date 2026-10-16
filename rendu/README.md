@@ -73,3 +73,29 @@ Exemple : avec la dimension ```compression-ratio``` et une petite largeur, la co
 - ```parallel.js``` : les coordonnées parallèles
 - ```kde.js``` : le calcul de la courbe de gaussiennes
 - ```histogram.js``` : l'histogramme et les sliders
+- ```pair.js``` : vue agrandie de deux dimensions, liée aux autres sélections
+
+
+## Exploration détaillée et filtrage
+
+- Le brushing existe dans les trois vues. Cocher « Afficher uniquement la sélection » masque les voitures hors sélection ; décocher restaure le contexte sans perdre la sélection. Le bouton de réinitialisation réaffiche tout et désactive le filtre.
+- La courbe est une somme de gaussiennes non normalisée. En mode filtré elle porte sur le groupe sélectionné, sinon sur les 201 voitures. Son échelle verticale est indépendante des effectifs ; une intersection courbe/barre ne signifie pas une égalité.
+- La vue agrandie d'une paire est accessible par les menus ou par double-clic sur une cellule. Elle conserve les couleurs et la sélection liée. Les matrices et parallèles tiennent dans la largeur disponible ; utiliser la paire pour les détails sur petit écran.
+- Le résumé indique les effectifs par carburant, le prix médian et le rendement médian en ville. Les tooltips des bins affichent bornes et effectifs. L'histogramme conserve la sélection lors du redimensionnement.
+- Le script ../scripts/prepare_data.py est conservé pour reproduire le nettoyage. Il nécessite Python et pandas, mais l'application livrée ne nécessite aucune installation.
+
+## Évaluation à réaliser
+
+Faire essayer à quelques personnes : sélectionner les diesels via le taux de compression, activer le filtrage, lire la médiane puis réinitialiser. Noter erreurs et hésitations. Aucun résultat d'essai humain n'est revendiqué.
+
+
+## Filtrer sans geste à apprendre
+
+Le formulaire « Quelles voitures voulez-vous voir ? » permet de choisir Essence ou Diesel, puis éventuellement une dimension et ses bornes incluses. Les bornes vides ne limitent pas la plage. Un aperçu indique le nombre de correspondances ; cliquer sur « Afficher ces voitures » applique le filtre dans toutes les vues. « Tout afficher » annule les critères. Les brushes restent une autre façon de choisir un groupe et remplacent les critères du formulaire.
+
+
+## Vérifications techniques du 16 octobre 2026
+
+Chargement dans Chrome avec réseau désactivé, ressources locales présentes et syntaxe JavaScript contrôlée. Données comparées aux lignes brutes nettoyées : 201 voitures, 15 colonnes, aucune valeur manquante. Vérification des 588 combinaisons dimension/nombre de colonnes : effectif total, respect des intervalles et inclusion des maxima. Les arrondis flottants aux bornes intermédiaires sont corrigés manuellement après calcul de l'indice. Les sélections liées, filtres simples et combinés, cas vides, annulation et redimensionnement ont été testés. Aucun appel à fetch, d3.csv ou d3.bin ; aucune ressource réseau chargée.
+
+Les tests humains restent à faire. Sur petit écran, utiliser la paire agrandie pour lire les détails de la matrice. La compilation et la mise en page du PDF du rapport restent à vérifier dans un environnement LaTeX.

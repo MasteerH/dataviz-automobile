@@ -13,6 +13,37 @@ const histoLigne = d3.line()
   .x(function (p) { return histoX(p.x); })
   .y(function (p) { return histoYDensite(p.y); });
 const histoBrush = d3.brushX();
+let histoObservateur = null;
+let histoFrame = null;
+
+function histoAdapterLargeur() {
+  const nouvelle = Math.max(80, document.getElementById("histo").clientWidth - histoMarge.gauche - histoMarge.droite);
+  if (!histoGroupe || nouvelle === histoLargeur) return;
+  const ancienneSelection = d3.brushSelection(histoGroupe.select(".histo-brush").node());
+  const intervalle = ancienneSelection ? ancienneSelection.map(histoX.invert) : null;
+  histoLargeur = nouvelle;
+  d3.select("#histo svg").attr("width", histoLargeur + histoMarge.gauche + histoMarge.droite);
+  histoRedessiner();
+  if (intervalle) {
+    histoEffacement = true;
+    histoGroupe.select(".histo-brush").call(histoBrush.move, intervalle.map(histoX));
+    histoEffacement = false;
+  }
+  cacherTooltip();
+}
+
+function histoSurvol(event) {
+  if (event.buttons) { cacherTooltip(); return; }
+  const [x, y] = d3.pointer(event, histoGroupe.node());
+  if (x < 0 || x > histoLargeur || y < 0 || y > histoHauteur) { cacherTooltip(); return; }
+  const indice = Math.min(histoColonnes.length - 1, Math.floor(x / histoLargeur * histoColonnes.length));
+  const colonne = histoColonnes[indice];
+  const choisi = colonne.voitures.filter(estSelectionnee).length;
+  const borne = function (v) { return v.toLocaleString("fr-FR", { maximumFractionDigits: 6 }); };
+  const texte = "Intervalle [" + borne(colonne.debut) + " ; " + borne(colonne.fin) + (indice === histoColonnes.length - 1 ? "]" : "[") +
+    " · " + colonne.voitures.length + " voitures au total · " + choisi + (selection === null ? " affichées" : " sélectionnées");
+  afficherTexteTooltip(event, texte);
+}
 
 function histoConfigurerLargeur() {
   const etendue = etendues[histoDimension][1] - etendues[histoDimension][0];
@@ -31,7 +62,8 @@ function histoDessinerCourbe() {
   const points = [];
   for (let pixel = 0; pixel < histoLargeur; pixel += 3) points.push(histoX.invert(pixel));
   points.push(histoX.invert(histoLargeur));
-  const valeurs = data.map(function (d) { return d[histoDimension]; });
+  const groupe = filtreSelection ? data.filter(estSelectionnee) : data;
+  const valeurs = groupe.map(function (d) { return d[histoDimension]; });
   const sommes = kde(valeurs, largeur, points);
   histoPointsCourbe = points.map(function (x, i) { return { x: x, y: sommes[i] }; });
   histoYDensite.domain([0, d3.max(sommes) || 1]).range([histoHauteur, 0]);
@@ -40,6 +72,8 @@ function histoDessinerCourbe() {
     .attr("transform", "translate(" + histoLargeur + ",0)")
     .call(d3.axisRight(histoYDensite).ticks(5).tickFormat(formatAxe));
   histoGroupe.select(".histo-axe-densite").selectAll("text").style("font-size", "12px");
+  histoGroupe.select(".histo-vide").attr("x", histoLargeur / 2)
+    .attr("display", groupe.length ? "none" : null);
 }
 
 function histoCalculerColonnes(nom, nombre) {
@@ -55,6 +89,8 @@ function histoCalculerColonnes(nom, nombre) {
   data.forEach(function (d) {
     let indice = pas === 0 ? 0 : Math.floor((d[nom] - minimum) / pas);
     indice = Math.max(0, Math.min(nombre - 1, indice));
+    while (indice < nombre - 1 && d[nom] >= colonnes[indice].fin) indice++;
+    while (indice > 0 && d[nom] < colonnes[indice].debut) indice--;
     colonnes[indice].voitures.push(d);
   });
   const total = colonnes.reduce(function (somme, colonne) {
@@ -118,13 +154,12 @@ function histoRedessiner() {
   histoBrush.extent([[0, 0], [histoLargeur, histoHauteur]]);
   histoGroupe.select(".histo-brush").call(histoBrush);
   majHisto("histo");
-  histoDessinerCourbe();
 }
 
 function dessinerHisto() {
   const conteneur = document.getElementById("histo");
   d3.select(conteneur).selectAll(".placeholder").remove();
-  histoLargeur = Math.max(240, conteneur.clientWidth - histoMarge.gauche - histoMarge.droite);
+  histoLargeur = Math.max(80, conteneur.clientWidth - histoMarge.gauche - histoMarge.droite);
   histoDimension = dimensionCourante;
   histoConfigurerLargeur();
   histoGroupe = d3.select(conteneur).append("svg")
@@ -146,17 +181,28 @@ function dessinerHisto() {
     .attr("x", -histoHauteur / 2).attr("y", -44)
     .attr("text-anchor", "middle").style("font-size", "12px").text("Nombre de voitures");
   histoGroupe.append("g").attr("class", "histo-brush");
+  histoGroupe.append("text").attr("class", "histo-vide")
+    .attr("y", histoHauteur / 2).attr("text-anchor", "middle")
+    .attr("pointer-events", "none").style("font-size", "14px")
+    .text("Aucune voiture dans cette sélection");
+  histoGroupe.on("pointermove.tooltip", histoSurvol).on("pointerleave.tooltip", cacherTooltip);
   histoBrush.on("start", function () {
     if (typeof cacherTooltip === "function") cacherTooltip();
   }).on("brush end", histoPendantBrush);
   document.getElementById("bin-slider").addEventListener("input", histoRedessiner);
   document.getElementById("bandwidth-slider").addEventListener("input", histoDessinerCourbe);
   histoRedessiner();
+  histoObservateur = new ResizeObserver(function () {
+    cancelAnimationFrame(histoFrame);
+    histoFrame = requestAnimationFrame(histoAdapterLargeur);
+  });
+  histoObservateur.observe(conteneur);
 }
 
 function majHisto(source) {
   if (!histoGroupe) return;
   if (source !== "histo") histoEffacerBrush();
+  histoGroupe.select(".histo-barres").attr("display", filtreSelection ? "none" : null);
   const segments = [];
   histoColonnes.forEach(function (colonne) {
     let cumul = 0;
@@ -175,6 +221,7 @@ function majHisto(source) {
     .attr("y", function (s) { return histoY(s.haut); })
     .attr("height", function (s) { return histoY(s.bas) - histoY(s.haut); })
     .attr("fill", function (s) { return couleur(s.carburant); });
+  histoDessinerCourbe();
 }
 
 function dimensionHisto(nom) {

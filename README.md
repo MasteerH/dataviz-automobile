@@ -9,6 +9,8 @@ Matrice scatterplot, coordonnées parallèles et histogramme avec courbe de dens
 
 - rendu : le dossier à déposer pour le prof (ouvrir index.html dans Chrome)
 - automobile : les données brutes du UCI
+- scripts : script Python pour reproduire le nettoyage (pandas requis seulement pour la préparation)
+- rapport : source LaTeX et captures du compte rendu
 - NOTES_RAPPORT.md : nos justifications pour le rapport
 
 
