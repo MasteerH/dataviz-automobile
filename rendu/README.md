@@ -82,7 +82,6 @@ Exemple : avec la dimension ```compression-ratio``` et une petite largeur, la co
 - La courbe est une somme de gaussiennes non normalisée. En mode filtré elle porte sur le groupe sélectionné, sinon sur les 201 voitures. Son échelle verticale est indépendante des effectifs ; une intersection courbe/barre ne signifie pas une égalité.
 - La vue agrandie d'une paire est accessible par les menus ou par double-clic sur une cellule. Elle conserve les couleurs et la sélection liée. Les matrices et parallèles tiennent dans la largeur disponible ; utiliser la paire pour les détails sur petit écran.
 - Le résumé indique les effectifs par carburant, le prix médian et le rendement médian en ville. Les tooltips des bins affichent bornes et effectifs. L'histogramme conserve la sélection lors du redimensionnement.
-- Le script ../scripts/prepare_data.py est conservé pour reproduire le nettoyage. Il nécessite Python et pandas, mais l'application livrée ne nécessite aucune installation.
 
 ## Évaluation à réaliser
 

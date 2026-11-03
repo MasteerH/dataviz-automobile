@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="MAHDIR Hamza, EL AZIZI Amira Mariam">
   <title>Exploration du jeu Automobile</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,6 +11,7 @@
   <a class="skip-link" href="#exploration">Aller aux visualisations</a>
   <header class="page-header">
     <h1>Exploration du jeu Automobile</h1>
+    <p class="auteurs">Participants : MAHDIR Hamza, EL AZIZI Amira Mariam</p>
     <p>201 voitures · 12 dimensions numériques · Données UCI, 1985</p>
     <nav class="view-nav" aria-label="Accès aux graphiques">
       <a href="#splom-title"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v17h17"/><circle cx="8" cy="14" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="19" cy="5" r="1.5"/></svg>Matrice</a>
@@ -92,7 +94,7 @@
       <div class="controls" aria-label="Réglages de l’histogramme">
         <div class="control">
           <label for="dimension-select">Dimension affichée</label>
-          <!-- Noms et ordre conformes à NUMERIQUES dans prepare_data.py.
+          <!-- Noms et ordre conformes à dimensions dans main.js.
                histogram.js reliera ce menu à setDimension(). -->
           <select id="dimension-select">
             <option value="symboling">Risque d’assurance (symboling)</option>
@@ -132,6 +134,7 @@
        main.js doit attribuer les id de 0 à 200 et définir l’état partagé.
        Le démarrage des vues doit attendre leur chargement.
        La dimension initiale de main.js doit correspondre au menu (price). -->
+  <!-- Source des données : https://archive.ics.uci.edu/dataset/10/automobile -->
   <script src="data.js"></script>
   <script src="d3.v7.min.js"></script>
   <script src="main.js"></script>
